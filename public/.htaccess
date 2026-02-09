@@ -1,0 +1,35 @@
+RewriteEngine On
+
+# Rediriger vers HTTPS (optionnel - décommenter si nécessaire)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Si le fichier ou dossier existe, ne pas rediriger
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rediriger tout vers index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Empêcher l'accès direct aux fichiers sensibles
+<FilesMatch "\.(php|sql|md)$">
+    # Autoriser index.php et login.php
+    <If "%{REQUEST_URI} !~ m#^/(index|login|loginadmin)\.php$#">
+        # Bloquer l'accès aux autres fichiers PHP dans config, models, controllers
+        <If "%{REQUEST_URI} =~ m#/(config|models|controllers|database)/#">
+            Require all denied
+        </If>
+    </If>
+</FilesMatch>
+
+# Headers de sécurité
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Compression GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
